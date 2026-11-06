@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    # Blocca Ubuntu 24.04 per evitare la migrazione automatica a Ubuntu 26.04
     runs-on: ubuntu-24.04
 
     steps:
@@ -15,17 +14,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        # Passa a v5: unica modifica sostanziale è il runtime Node 24
         uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
-          # Disabilita la cache in scrittura per evitare l'errore 400.
-          # La lettura resta attiva (se esiste una cache valida, viene usata).
+          gradle-version: '8.7'
           cache-read-only: true
 
       - name: Build Debug APK

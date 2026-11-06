@@ -9,7 +9,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Build
@@ -99,6 +101,8 @@ fun AutoDiagApp(
             }
         }
     ) { pad ->
+        // Non usare fillMaxSize sul contenuto scrollabile interno:
+        // lo gestiscono le singole screen.
         Box(Modifier.padding(pad).fillMaxSize()) {
             when (tab) {
                 0 -> DiagnosiScreen(

@@ -26,8 +26,10 @@ private fun mesiTra(daData: String, aData: Date): Int {
         val cal1 = Calendar.getInstance().apply { time = da }
         val cal2 = Calendar.getInstance().apply { time = aData }
         (cal2.get(Calendar.YEAR) - cal1.get(Calendar.YEAR)) * 12 +
-                (cal2.get(Calendar.MONTH) - cal1.get(Calendar.MONTH))
-    } catch (e: Exception) { Int.MAX_VALUE }
+            (cal2.get(Calendar.MONTH) - cal1.get(Calendar.MONTH))
+    } catch (e: Exception) {
+        Int.MAX_VALUE
+    }
 }
 
 @Composable
@@ -42,11 +44,13 @@ fun ManutenzioneScreen(vm: MainViewModel) {
     var showClearAll by remember { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Km attuali
-        Card {
+        Card(Modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Chilometraggio attuale", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
@@ -59,43 +63,56 @@ fun ManutenzioneScreen(vm: MainViewModel) {
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = { kmInput.toIntOrNull()?.let { vm.setKm(it) } }) { Text("Salva") }
+                    Button(onClick = { kmInput.toIntOrNull()?.let { vm.setKm(it) } }) {
+                        Text("Salva")
+                    }
                 }
             }
         }
 
-        // Aggiungi intervento
-        Card {
+        Card(Modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Aggiungi intervento", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = nome, onValueChange = { nome = it },
+                    value = nome,
+                    onValueChange = { nome = it },
                     label = { Text("Descrizione (es. Cambio olio)") },
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
                 Row {
                     OutlinedTextField(
-                        value = kmInt, onValueChange = { kmInt = it.filter { c -> c.isDigit() } },
+                        value = kmInt,
+                        onValueChange = { kmInt = it.filter { c -> c.isDigit() } },
                         label = { Text("Ogni (km)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true, modifier = Modifier.weight(1f)
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
                     )
                     Spacer(Modifier.width(8.dp))
                     OutlinedTextField(
-                        value = mesiInt, onValueChange = { mesiInt = it.filter { c -> c.isDigit() } },
+                        value = mesiInt,
+                        onValueChange = { mesiInt = it.filter { c -> c.isDigit() } },
                         label = { Text("Ogni (mesi)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true, modifier = Modifier.weight(1f)
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
                     )
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = {
                         if (nome.isNotBlank()) {
-                            vm.addMaint(nome, kmInt.toIntOrNull() ?: 0, mesiInt.toIntOrNull() ?: 0)
-                            nome = ""; kmInt = ""; mesiInt = ""
+                            vm.addMaint(
+                                nome,
+                                kmInt.toIntOrNull() ?: 0,
+                                mesiInt.toIntOrNull() ?: 0
+                            )
+                            nome = ""
+                            kmInt = ""
+                            mesiInt = ""
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -103,8 +120,7 @@ fun ManutenzioneScreen(vm: MainViewModel) {
             }
         }
 
-        // Lista
-        Card {
+        Card(Modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Row(
                     Modifier.fillMaxWidth(),
@@ -112,7 +128,10 @@ fun ManutenzioneScreen(vm: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Scadenze", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = { showClearAll = true }, enabled = items.isNotEmpty()) {
+                    TextButton(
+                        onClick = { showClearAll = true },
+                        enabled = items.isNotEmpty()
+                    ) {
                         Text("Cancella tutto", color = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -121,9 +140,11 @@ fun ManutenzioneScreen(vm: MainViewModel) {
                     Text("Nessun intervento registrato.")
                 } else {
                     val oggi = Date()
-                    items.forEach { item ->
+                    items.forEachIndexed { index, item ->
                         ManutenzioneItem(item, km, oggi, vm)
-                        HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                        if (index < items.lastIndex) {
+                            HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                        }
                     }
                 }
             }
@@ -137,8 +158,11 @@ fun ManutenzioneScreen(vm: MainViewModel) {
             text = { Text("L'operazione è irreversibile.") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.clearAllMaint(); showClearAll = false
-                }) { Text("Cancella tutto", color = MaterialTheme.colorScheme.error) }
+                    vm.clearAllMaint()
+                    showClearAll = false
+                }) {
+                    Text("Cancella tutto", color = MaterialTheme.colorScheme.error)
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showClearAll = false }) { Text("Annulla") }
@@ -148,7 +172,12 @@ fun ManutenzioneScreen(vm: MainViewModel) {
 }
 
 @Composable
-private fun ManutenzioneItem(item: ManutenzioneEntity, km: Int, oggi: Date, vm: MainViewModel) {
+private fun ManutenzioneItem(
+    item: ManutenzioneEntity,
+    km: Int,
+    oggi: Date,
+    vm: MainViewModel
+) {
     val remKm = if (item.kmIntervallo > 0 && item.ultimoKm > 0)
         item.ultimoKm + item.kmIntervallo - km else null
     val remMesi = if (item.mesiIntervallo > 0 && item.ultimaData.isNotBlank())
@@ -169,10 +198,18 @@ private fun ManutenzioneItem(item: ManutenzioneEntity, km: Int, oggi: Date, vm: 
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(item.nome, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Text(
+                item.nome,
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.weight(1f)
+            )
             Text(label, color = color, style = MaterialTheme.typography.labelMedium)
             IconButton(onClick = { vm.deleteMaint(item) }) {
-                Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Elimina",
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
         val dettagli = buildList {
@@ -183,11 +220,12 @@ private fun ManutenzioneItem(item: ManutenzioneEntity, km: Int, oggi: Date, vm: 
         }
         Text(dettagli.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
         Text(
-            "Ultimo: ${if (item.ultimoKm > 0) "${item.ultimoKm} km" else "—"}${if (item.ultimaData.isNotBlank()) " · ${item.ultimaData}" else ""}",
+            "Ultimo: ${if (item.ultimoKm > 0) "${item.ultimoKm} km" else "—"}" +
+                if (item.ultimaData.isNotBlank()) " · ${item.ultimaData}" else "",
             style = MaterialTheme.typography.bodySmall
         )
         TextButton(onClick = { vm.markDone(item) }) {
-            Text("✓ Segna come eseguito (a ${km} km, oggi)")
+            Text("✓ Segna come eseguito (a $km km, oggi)")
         }
     }
 }

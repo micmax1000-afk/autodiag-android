@@ -21,15 +21,14 @@ import com.example.autodiag.bluetooth.DtcDatabase
 import com.example.autodiag.viewmodel.ConnectionState
 import com.example.autodiag.viewmodel.MainViewModel
 
-/** Funzione normale: riceve il Context come parametro, NON usa LocalContext.current. */
 private fun hasBtPermissions(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         ContextCompat.checkSelfPermission(
             context, Manifest.permission.BLUETOOTH_CONNECT
         ) == PackageManager.PERMISSION_GRANTED &&
-        ContextCompat.checkSelfPermission(
-            context, Manifest.permission.BLUETOOTH_SCAN
-        ) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.BLUETOOTH_SCAN
+            ) == PackageManager.PERMISSION_GRANTED
     } else true
 }
 
@@ -48,12 +47,17 @@ fun DiagnosiScreen(
 
     var showDeviceDialog by remember { mutableStateOf(false) }
 
+    // Un solo verticalScroll (quello esterno). Niente scroll annidati:
+    // altrimenti Compose misura con maxHeight = Infinity e crasha.
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // ===== CONNESSIONE =====
-        Card {
+        Card(Modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Connessione", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
@@ -90,15 +94,16 @@ fun DiagnosiScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("Connetti via Bluetooth") }
                 } else {
-                    OutlinedButton(onClick = { vm.disconnect() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Disconnetti")
-                    }
+                    OutlinedButton(
+                        onClick = { vm.disconnect() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Disconnetti") }
                 }
             }
         }
 
         // ===== DTC =====
-        Card {
+        Card(Modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Errori memorizzati (DTC)", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
@@ -138,18 +143,15 @@ fun DiagnosiScreen(
             }
         }
 
-        // ===== LOG =====
-        Card {
+        // ===== LOG (senza scroll interno) =====
+        Card(Modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Log", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    log.joinToString("\n").ifBlank { "Pronto." },
+                    log.takeLast(30).joinToString("\n").ifBlank { "Pronto." },
                     fontFamily = FontFamily.Monospace,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .heightIn(max = 220.dp)
-                        .verticalScroll(rememberScrollState())
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
         }

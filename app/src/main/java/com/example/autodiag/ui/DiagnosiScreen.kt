@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -84,7 +83,6 @@ fun DiagnosiScreen(
                                     showDeviceDialog = true
                                 }
                             }
-                            // 1) Chiedi permessi, 2) poi tocca le API Bluetooth
                             if (hasBtPermissions(context)) proceed()
                             else requestPermissions(proceed)
                         },
@@ -109,17 +107,25 @@ fun DiagnosiScreen(
                 } else {
                     dtcs.forEach { code ->
                         Column(Modifier.padding(vertical = 4.dp)) {
-                            Text(code, style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.primary)
-                            Text(DtcDatabase.describe(code),
-                                style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                code,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                DtcDatabase.describe(code),
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                     }
                 }
                 Spacer(Modifier.height(12.dp))
                 val canUse = state is ConnectionState.Connected && !busy
-                Button(onClick = { vm.readDtcs() }, enabled = canUse,
-                    modifier = Modifier.fillMaxWidth()) { Text("Leggi errori") }
+                Button(
+                    onClick = { vm.readDtcs() },
+                    enabled = canUse,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Leggi errori") }
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { vm.clearDtcs() },
@@ -141,7 +147,8 @@ fun DiagnosiScreen(
                     log.joinToString("\n").ifBlank { "Pronto." },
                     fontFamily = FontFamily.Monospace,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.heightIn(max = 220.dp)
+                    modifier = Modifier
+                        .heightIn(max = 220.dp)
                         .verticalScroll(rememberScrollState())
                 )
             }

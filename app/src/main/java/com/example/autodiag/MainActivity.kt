@@ -40,7 +40,6 @@ class MainActivity : ComponentActivity() {
     private val enableBtLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        // Se l'utente ha attivato il Bluetooth, riprova l'azione
         val retry = retryAfterEnable
         retryAfterEnable = null
         retry?.invoke()
@@ -78,7 +77,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AutoDiagApp(
     requestPermissions: (() -> Unit) -> Unit,
-    requestEnableBluetooth: ((() -> Unit)?) -> Unit,
+    requestEnableBluetooth: (() -> Unit) -> Unit,
     viewModel: MainViewModel = viewModel()
 ) {
     var tab by remember { mutableIntStateOf(0) }
@@ -105,7 +104,7 @@ fun AutoDiagApp(
                 0 -> DiagnosiScreen(
                     vm = viewModel,
                     requestPermissions = requestPermissions,
-                    requestEnableBluetooth = { requestEnableBluetooth(null) }
+                    requestEnableBluetooth = { requestEnableBluetooth {} }
                 )
                 1 -> CodiciScreen()
                 2 -> ManutenzioneScreen(viewModel)

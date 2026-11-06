@@ -47,8 +47,6 @@ fun DiagnosiScreen(
 
     var showDeviceDialog by remember { mutableStateOf(false) }
 
-    // Un solo verticalScroll (quello esterno). Niente scroll annidati:
-    // altrimenti Compose misura con maxHeight = Infinity e crasha.
     Column(
         Modifier
             .fillMaxSize()
@@ -56,9 +54,8 @@ fun DiagnosiScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // ===== CONNESSIONE =====
-        Card(Modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier = Modifier.padding(16.dp)) {
                 Text("Connessione", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 val statusText = when (val s = state) {
@@ -102,16 +99,15 @@ fun DiagnosiScreen(
             }
         }
 
-        // ===== DTC =====
-        Card(Modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Errori memorizzati (DTC)", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 if (dtcs.isEmpty()) {
                     Text("Nessun errore letto.", style = MaterialTheme.typography.bodySmall)
                 } else {
                     dtcs.forEach { code ->
-                        Column(Modifier.padding(vertical = 4.dp)) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
                             Text(
                                 code,
                                 style = MaterialTheme.typography.titleSmall,
@@ -143,9 +139,8 @@ fun DiagnosiScreen(
             }
         }
 
-        // ===== LOG (senza scroll interno) =====
-        Card(Modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Log", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -174,7 +169,7 @@ fun DiagnosiScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(dev.name ?: "Sconosciuto")
                                     Text(dev.address, style = MaterialTheme.typography.bodySmall)
                                 }

@@ -50,8 +50,8 @@ fun ManutenzioneScreen(vm: MainViewModel) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Card(Modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Chilometraggio attuale", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -70,8 +70,8 @@ fun ManutenzioneScreen(vm: MainViewModel) {
             }
         }
 
-        Card(Modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Aggiungi intervento", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
@@ -120,8 +120,8 @@ fun ManutenzioneScreen(vm: MainViewModel) {
             }
         }
 
-        Card(Modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -143,7 +143,7 @@ fun ManutenzioneScreen(vm: MainViewModel) {
                     items.forEachIndexed { index, item ->
                         ManutenzioneItem(item, km, oggi, vm)
                         if (index < items.lastIndex) {
-                            HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                         }
                     }
                 }
@@ -192,7 +192,7 @@ private fun ManutenzioneItem(
         else -> "In regola" to androidx.compose.ui.graphics.Color(0xFF33D17A)
     }
 
-    Column(Modifier.padding(vertical = 4.dp)) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

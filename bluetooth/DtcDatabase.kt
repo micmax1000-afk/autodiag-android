@@ -1,0 +1,55 @@
+package com.example.autodiag.bluetooth
+
+object DtcDatabase {
+    val codes: Map<String, String> = mapOf(
+        "P0100" to "Sensore portata aria (MAF) — circuito",
+        "P0101" to "Sensore MAF — prestazioni fuori range",
+        "P0102" to "Sensore MAF — segnale basso",
+        "P0110" to "Sensore temperatura aria — circuito",
+        "P0113" to "Sensore temperatura aria — segnale alto",
+        "P0120" to "Sensore posizione farfalla — circuito",
+        "P0130" to "Sonda lambda (B1S1) — circuito",
+        "P0135" to "Sonda lambda (B1S1) — riscaldatore",
+        "P0171" to "Miscela troppo magra (Banca 1)",
+        "P0172" to "Miscela troppo ricca (Banca 1)",
+        "P0200" to "Iniettori — circuito",
+        "P0230" to "Pompa carburante — circuito primario",
+        "P0300" to "Mancate accensioni casuali/multipli",
+        "P0301" to "Mancata accensione cilindro 1",
+        "P0302" to "Mancata accensione cilindro 2",
+        "P0303" to "Mancata accensione cilindro 3",
+        "P0304" to "Mancata accensione cilindro 4",
+        "P0325" to "Sensore battito (knock) — circuito",
+        "P0335" to "Sensore posizione albero motore — circuito",
+        "P0340" to "Sensore posizione albero a camme — circuito",
+        "P0400" to "Ricircolo gas di scarico (EGR) — flusso",
+        "P0401" to "EGR — flusso insufficiente",
+        "P0420" to "Catalizzatore — efficienza sotto soglia (Banca 1)",
+        "P0430" to "Catalizzatore — efficienza sotto soglia (Banca 2)",
+        "P0440" to "Sistema evaporazione carburante (EVAP)",
+        "P0442" to "EVAP — piccola perdita rilevata",
+        "P0455" to "EVAP — grande perdita (tappo serbatoio?)",
+        "P0500" to "Sensore velocità veicolo — circuito",
+        "P0505" to "Controllo minimo (idle) — malfunzionamento",
+        "P0560" to "Tensione alimentazione sistema — fuori range",
+        "P0600" to "Rete di comunicazione seriale — errore",
+        "P0700" to "Sistema controllo trasmissione — richiesta MIL",
+        "P0715" to "Sensore velocità turbina — circuito",
+        "P0740" to "Frizione convertitore di coppia — circuito",
+        "B0001" to "Sistema airbag — guasto generico",
+        "B0100" to "Sensore urto frontale — circuito",
+        "B1000" to "Modulo airbag — errore interno",
+        "B1200" to "Sistema clima — malfunzionamento generico",
+        "C0035" to "Sensore ruota anteriore sinistra — circuito",
+        "C0040" to "Sensore ruota anteriore destra — circuito",
+        "C1200" to "ABS — pompa/valvola malfunzionamento",
+        "U0100" to "Comunicazione persa con ECU motore",
+        "U0101" to "Comunicazione persa con centralina cambio",
+        "U0121" to "Comunicazione persa con centralina ABS",
+        "U0155" to "Comunicazione persa con quadro strumenti",
+        "U1000" to "Errore di rete CAN — guasto generico"
+    )
+
+    fun describe(code: String): String =
+        codes[code] ?: "Codice non presente nel database locale."
+}

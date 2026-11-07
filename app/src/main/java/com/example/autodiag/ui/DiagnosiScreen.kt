@@ -55,7 +55,7 @@ fun DiagnosiScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Card(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Connessione", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 val statusText = when (val s = state) {

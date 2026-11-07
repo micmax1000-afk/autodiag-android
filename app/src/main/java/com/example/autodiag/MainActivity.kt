@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.autodiag.ui.CodiciScreen
 import com.example.autodiag.ui.DiagnosiScreen
@@ -51,25 +52,27 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AutoDiagTheme {
-                AutoDiagApp(
-                    requestPermissions = { cb ->
-                        pendingCallback = cb
-                        val perms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                            arrayOf(
-                                Manifest.permission.BLUETOOTH_SCAN,
-                                Manifest.permission.BLUETOOTH_CONNECT
+            CompositionLocalProvider(LocalLifecycleOwner provides this@MainActivity) {
+                AutoDiagTheme {
+                    AutoDiagApp(
+                        requestPermissions = { cb ->
+                            pendingCallback = cb
+                            val perms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                                arrayOf(
+                                    Manifest.permission.BLUETOOTH_SCAN,
+                                    Manifest.permission.BLUETOOTH_CONNECT
+                                )
+                            else arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+                            permissionLauncher.launch(perms)
+                        },
+                        requestEnableBluetooth = { retry ->
+                            retryAfterEnable = retry
+                            enableBtLauncher.launch(
+                                Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                             )
-                        else arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-                        permissionLauncher.launch(perms)
-                    },
-                    requestEnableBluetooth = { retry ->
-                        retryAfterEnable = retry
-                        enableBtLauncher.launch(
-                            Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                        )
-                    }
-                )
+                        }
+                    )
+                }
             }
         }
     }
@@ -101,8 +104,6 @@ fun AutoDiagApp(
             }
         }
     ) { pad ->
-        // Non usare fillMaxSize sul contenuto scrollabile interno:
-        // lo gestiscono le singole screen.
         Box(Modifier.padding(pad).fillMaxSize()) {
             when (tab) {
                 0 -> DiagnosiScreen(

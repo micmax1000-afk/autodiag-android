@@ -4,16 +4,19 @@ App Android nativa (Kotlin + Jetpack Compose) per diagnosi OBD2 via adattatore E
 
 ## Funzionalità
 
-- Connessione Bluetooth a ELM327 già accoppiato
-- Lettura e cancellazione codici errore (DTC)
+- Connessione Bluetooth a ELM327 già accoppiato (non BLE)
+- Parametri in diretta Mode 01 (giri, velocità, temperature, carico, tensione, trim, …) solo se la centralina li supporta
+- Lettura separata dei DTC memorizzati (03), pending (07) e permanenti (0A)
+- Cancellazione Mode 04, con esito reale: cosa è stato tolto e cosa resta (i permanenti non si cancellano)
 - Database locale descrizioni codici generici
-- Tracking chilometraggio e intervalli di manutenzione
+- Promemoria chilometraggio e intervalli di manutenzione (solo sul telefono: non resetta la spia service)
 
 ## Requisiti
 
 - Android 7.0+ (API 24)
 - Adattatore ELM327 Bluetooth classico (non BLE-only)
 - Dispositivo già accoppiato dalle impostazioni di sistema
+- Quadro acceso. Per cancellare i codici il motore va spento
 
 ## Build
 

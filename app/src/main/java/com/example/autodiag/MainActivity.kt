@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.autodiag.ui.CodiciScreen
 import com.example.autodiag.ui.DiagnosiScreen
 import com.example.autodiag.ui.ManutenzioneScreen
+import com.example.autodiag.ui.ParametriScreen
 import com.example.autodiag.ui.theme.AutoDiagTheme
 import com.example.autodiag.viewmodel.MainViewModel
 
@@ -86,8 +88,13 @@ fun AutoDiagApp(
     viewModel: MainViewModel = viewModel()
 ) {
     var tab by remember { mutableIntStateOf(0) }
-    val labels = listOf("Diagnosi", "Codici", "Manutenzione")
-    val icons = listOf(Icons.Default.Bluetooth, Icons.Default.Search, Icons.Default.Build)
+    val labels = listOf("Diagnosi", "Parametri", "Codici", "Tagliandi")
+    val icons = listOf(
+        Icons.Default.Bluetooth,
+        Icons.Default.Speed,
+        Icons.Default.Search,
+        Icons.Default.Build
+    )
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("AutoDiag") }) },
@@ -109,10 +116,11 @@ fun AutoDiagApp(
                 0 -> DiagnosiScreen(
                     vm = viewModel,
                     requestPermissions = requestPermissions,
-                    requestEnableBluetooth = { requestEnableBluetooth {} }
+                    requestEnableBluetooth = requestEnableBluetooth
                 )
-                1 -> CodiciScreen()
-                2 -> ManutenzioneScreen(viewModel)
+                1 -> ParametriScreen(viewModel)
+                2 -> CodiciScreen()
+                3 -> ManutenzioneScreen(viewModel)
             }
         }
     }

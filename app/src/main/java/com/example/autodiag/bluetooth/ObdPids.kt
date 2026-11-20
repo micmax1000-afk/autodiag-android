@@ -24,25 +24,8 @@ class PidSpec(
     }
 }
 
-fun extractMode01(raw: String, pid: Int, nbytes: Int): IntArray? {
-    val upper = raw.uppercase(Locale.US)
-    if (
-        upper.contains("NO DATA") ||
-        upper.contains("UNABLE") ||
-        upper.contains("ERROR") ||
-        upper.contains("STOPPED")
-    ) {
-        return null
-    }
-    val hex = upper.replace(Regex("[^0-9A-F]"), "")
-    if (Regex("7F01[0-9A-F]{2}").containsMatchIn(hex)) return null
-    val marker = "41" + "%02X".format(pid)
-    val idx = hex.indexOf(marker)
-    if (idx < 0 || idx % 2 != 0) return null
-    val data = hex.substring(idx + marker.length)
-    if (data.length < nbytes * 2) return null
-    return IntArray(nbytes) { i -> data.substring(i * 2, i * 2 + 2).toInt(16) }
-}
+fun extractMode01(raw: String, pid: Int, nbytes: Int): IntArray? =
+    ObdParser.extractMode01(raw, pid, nbytes)
 
 private fun num(v: Double, digits: Int): String =
     if (digits == 0) "%.0f".format(Locale.ITALY, v) else "%.1f".format(Locale.ITALY, v)

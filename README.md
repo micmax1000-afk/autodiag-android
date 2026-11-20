@@ -6,7 +6,8 @@ App Android nativa (Kotlin + Jetpack Compose) per diagnosi OBD2 via adattatore E
 
 - Connessione Bluetooth a ELM327 già accoppiato (non BLE)
 - Parametri in diretta Mode 01 (giri, velocità, temperature, carico, tensione, trim, …) solo se la centralina li supporta
-- Lettura separata dei DTC memorizzati (03), pending (07) e permanenti (0A)
+- Lettura separata dei DTC memorizzati (03), pending (07) e permanenti (0A), con decodifica corretta su CAN (anche risposte multi-frame) e protocolli più vecchi
+- Rilevamento della perdita di connessione Bluetooth
 - Cancellazione Mode 04, con esito reale: cosa è stato tolto e cosa resta (i permanenti non si cancellano)
 - Database locale descrizioni codici generici
 - Promemoria chilometraggio e intervalli di manutenzione (solo sul telefono: non resetta la spia service)
@@ -27,5 +28,11 @@ gradle assembleDebug
 ```
 
 L’APK di debug si trova in `app/build/outputs/apk/debug/`.
+
+Test del parser OBD (JVM, senza dispositivo):
+
+```bash
+gradle testDebugUnitTest
+```
 
 La CI di GitHub Actions genera l’APK a ogni push su `main`.

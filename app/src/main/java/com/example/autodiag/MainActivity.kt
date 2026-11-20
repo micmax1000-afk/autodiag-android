@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,7 +41,15 @@ class MainActivity : ComponentActivity() {
     ) { grants ->
         val callback = pendingCallback
         pendingCallback = null
-        if (grants.values.all { it }) callback?.invoke()
+        if (grants.values.all { it }) {
+            callback?.invoke()
+        } else {
+            Toast.makeText(
+                this,
+                "Permesso Bluetooth negato: concedilo dalle impostazioni dell'app.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private val enableBtLauncher = registerForActivityResult(
@@ -87,7 +97,7 @@ fun AutoDiagApp(
     requestEnableBluetooth: (() -> Unit) -> Unit,
     viewModel: MainViewModel = viewModel()
 ) {
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     val labels = listOf("Diagnosi", "Parametri", "Codici", "Tagliandi")
     val icons = listOf(
         Icons.Default.Bluetooth,

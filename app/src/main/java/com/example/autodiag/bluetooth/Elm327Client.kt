@@ -13,11 +13,15 @@ import java.io.InputStream
 import java.util.Locale
 import java.util.UUID
 
+/** Il collegamento Bluetooth si è interrotto: serve riconnettersi. */
+class LinkLostException(message: String) : IOException(message)
+
 class Elm327Client {
 
     private val io = Mutex()
     private var socket: BluetoothSocket? = null
     private val supportGroups = mutableMapOf<Int, ByteArray>()
+    @Volatile private var isCan = false
 
     val isConnected: Boolean get() = socket?.isConnected == true
 
@@ -47,6 +51,7 @@ class Elm327Client {
         }
         socket = s
         supportGroups.clear()
+        isCan = false
         try {
             delay(300)
             sendCommand("ATZ", 3000)
@@ -67,6 +72,11 @@ class Elm327Client {
                 throw IOException(explainLink(wakeup))
             }
             discoverSupport()
+            isCan = try {
+                ObdParser.isCanProtocol(sendCommand("ATDPN", 2500))
+            } catch (_: IOException) {
+                false
+            }
             val proto = sendCommand("ATDP", 2500)
             proto.lineSequence().map { it.trim() }.lastOrNull { it.isNotEmpty() } ?: "OBD-II"
         } catch (e: Exception) {
@@ -152,10 +162,8 @@ class Elm327Client {
             throw IOException(explainLink(raw))
         }
         if (u.contains("NO DATA")) return ModeRead(emptyList(), null)
-        val hex = u.replace(Regex("[^0-9A-F]"), "")
-        val nrc = Regex("7F$cmd([0-9A-F]{2})").find(hex)
-        if (nrc != null) {
-            val code = nrc.groupValues[1]
+        val code = ObdParser.hasNegativeResponse(raw, cmd)
+        if (code != null) {
             val note = if (code == "11" || code == "12") {
                 "Non supportati da questa centralina."
             } else {
@@ -166,7 +174,7 @@ class Elm327Client {
         if (u.contains("ERROR") || u.contains("STOPPED") || u.trim() == "?") {
             throw IOException(raw.lineSequence().firstOrNull()?.take(100) ?: "Errore OBD")
         }
-        return ModeRead(parseDtcs(raw, positive), null)
+        return ModeRead(ObdParser.parseDtcs(raw, positive, isCan), null)
     }
 
     private fun interpretClear(raw: String): ClearOutcome {
@@ -174,18 +182,17 @@ class Elm327Client {
         if (u.contains("UNABLE") || u.contains("STOPPED") || u.contains("CAN ERROR") || u.contains("BUS ERROR")) {
             return ClearOutcome(false, "Centralina non raggiunta.")
         }
-        val hex = u.replace(Regex("[^0-9A-F]"), "")
-        val nrc = Regex("7F04([0-9A-F]{2})").find(hex)
+        val nrc = ObdParser.hasNegativeResponse(raw, "04")
         if (nrc != null) {
-            val detail = when (nrc.groupValues[1]) {
+            val detail = when (nrc) {
                 "11" -> "La centralina non accetta la cancellazione OBD standard."
                 "22" -> "Condizioni non corrette: spegni il motore e lascia il quadro acceso."
                 "33" -> "Accesso negato: questo modulo non si cancella con l'ELM327."
-                else -> "Cancellazione rifiutata (NRC ${nrc.groupValues[1]})."
+                else -> "Cancellazione rifiutata (NRC $nrc)."
             }
             return ClearOutcome(false, detail)
         }
-        if (hex.contains("44")) {
+        if (ObdParser.messages(raw).any { it.startsWith("44") }) {
             return ClearOutcome(true, "La centralina ha accettato la cancellazione.")
         }
         if (u.contains("NO DATA")) {
@@ -197,26 +204,33 @@ class Elm327Client {
 
     suspend fun sendCommand(cmd: String, timeoutMs: Long = 4000): String = io.withLock {
         withContext(Dispatchers.IO) {
-            val out = socket?.outputStream ?: throw IOException("Non connesso")
-            val inp = socket?.inputStream ?: throw IOException("Non connesso")
-            drain(inp)
-            out.write("$cmd\r".toByteArray(Charsets.US_ASCII))
-            out.flush()
-
+            val s = socket ?: throw LinkLostException("Non connesso")
             val sb = StringBuilder()
-            val buffer = ByteArray(1024)
-            val start = System.currentTimeMillis()
-            while (System.currentTimeMillis() - start < timeoutMs) {
-                val avail = inp.available()
-                if (avail > 0) {
-                    val n = inp.read(buffer, 0, minOf(avail, buffer.size))
-                    if (n > 0) {
-                        sb.append(String(buffer, 0, n, Charsets.ISO_8859_1))
-                        if (sb.indexOf('>') >= 0) break
+            try {
+                val out = s.outputStream
+                val inp = s.inputStream
+                drain(inp)
+                out.write("$cmd\r".toByteArray(Charsets.US_ASCII))
+                out.flush()
+
+                val buffer = ByteArray(1024)
+                val start = System.currentTimeMillis()
+                while (System.currentTimeMillis() - start < timeoutMs) {
+                    val avail = inp.available()
+                    if (avail > 0) {
+                        val n = inp.read(buffer, 0, minOf(avail, buffer.size))
+                        if (n < 0) throw IOException("Flusso chiuso")
+                        if (n > 0) {
+                            sb.append(String(buffer, 0, n, Charsets.ISO_8859_1))
+                            if (sb.indexOf('>') >= 0) break
+                        }
+                    } else {
+                        delay(20)
                     }
-                } else {
-                    delay(20)
                 }
+            } catch (e: IOException) {
+                disconnect()
+                throw LinkLostException("Collegamento Bluetooth interrotto (${e.message ?: "errore I/O"})")
             }
             if (sb.indexOf('>') < 0) throw IOException("Timeout su $cmd")
             sb.toString()
@@ -236,37 +250,5 @@ class Elm327Client {
             val n = inp.read(buffer)
             if (n <= 0) break
         }
-    }
-
-    private fun parseDtcs(raw: String, positive: String): List<String> {
-        val out = mutableListOf<String>()
-        raw.lineSequence().forEach { line ->
-            val hex = line.uppercase(Locale.US).replace(Regex("[^0-9A-F]"), "")
-            if (hex.isEmpty()) return@forEach
-            val idx = hex.indexOf(positive)
-            if (idx < 0) return@forEach
-            val chunk = hex.substring(idx + positive.length)
-            val usable = chunk.length - (chunk.length % 4)
-            var i = 0
-            while (i + 4 <= usable) {
-                val pair = chunk.substring(i, i + 4)
-                if (pair != "0000") out.add(decodeDtc(pair))
-                i += 4
-            }
-        }
-        return out.distinct()
-    }
-
-    private fun decodeDtc(pair: String): String {
-        val v1 = pair.substring(0, 2).toInt(16)
-        val v2 = pair.substring(2, 4).toInt(16)
-        val letter = when ((v1 shr 6) and 0x03) {
-            0 -> 'P'
-            1 -> 'C'
-            2 -> 'B'
-            else -> 'U'
-        }
-        val code = ((v1 and 0x3F) shl 8) or v2
-        return "%c%04X".format(letter, code)
     }
 }

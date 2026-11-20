@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.autodiag.bluetooth.Elm327Client
+import com.example.autodiag.bluetooth.LinkLostException
 import com.example.autodiag.bluetooth.LiveReading
 import com.example.autodiag.bluetooth.ObdPids
 import com.example.autodiag.data.AppDatabase
@@ -136,14 +137,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun disconnect() {
         liveJob?.cancel()
         client.disconnect()
+        resetSession()
         _connectionState.value = ConnectionState.Idle
+        addLog("Disconnesso")
+    }
+
+    private fun onLinkLost(e: LinkLostException) {
+        liveJob?.cancel()
+        client.disconnect()
+        resetSession()
+        _connectionState.value = ConnectionState.Error("Connessione persa. Riconnetti l'adattatore.")
+        addLog("✗ ${e.message}")
+    }
+
+    private fun resetSession() {
         _stored.value = emptyList()
         _pending.value = emptyList()
         _permanent.value = emptyList()
         _dtcNote.value = ""
         _clearReport.value = null
         _params.value = emptyList()
-        addLog("Disconnesso")
     }
 
     fun readDtcs() {
@@ -157,6 +170,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     addLog(
                         "✓ memorizzati ${_stored.value.size}, pending ${_pending.value.size}, permanenti ${_permanent.value.size}"
                     )
+                } catch (e: LinkLostException) {
+                    onLinkLost(e)
                 } catch (e: Exception) {
                     addLog("✗ ${e.message}")
                 } finally {
@@ -187,6 +202,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         permanent = _permanent.value,
                     )
                     addLog(if (outcome.accepted) "✓ ${outcome.detail}" else "✗ ${outcome.detail}")
+                } catch (e: LinkLostException) {
+                    onLinkLost(e)
                 } catch (e: Exception) {
                     addLog("✗ ${e.message}")
                 } finally {
@@ -211,14 +228,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 val specs = ObdPids.all.filter { client.isPidSupported(it.pid) }.ifEmpty { ObdPids.fallback }
                 _params.value = specs.map { LiveReading(it.pid, it.name, "—", it.unit) }
+                var failures = 0
                 while (isActive) {
                     for (spec in specs) {
                         if (!isActive) break
                         val value = try {
-                            client.readPid(spec)
-                        } catch (e: Exception) {
-                            addLog("✗ Parametri: ${e.message}")
+                            client.readPid(spec).also { failures = 0 }
+                        } catch (e: LinkLostException) {
+                            onLinkLost(e)
                             return@launch
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            failures++
+                            if (failures >= MAX_LIVE_FAILURES) {
+                                addLog("✗ Parametri: ${e.message}. Lettura fermata.")
+                                return@launch
+                            }
+                            null
                         }
                         if (value != null) {
                             _params.value = _params.value.map {
@@ -287,6 +314,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun clearAllMaint() {
         viewModelScope.launch { dao.clearAll() }
+    }
+
+    private companion object {
+        const val MAX_LIVE_FAILURES = 5
     }
 
     override fun onCleared() {

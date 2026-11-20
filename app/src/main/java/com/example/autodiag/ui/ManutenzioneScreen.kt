@@ -183,10 +183,12 @@ private fun ManutenzioneItem(
     val remMesi = if (item.mesiIntervallo > 0 && item.ultimaData.isNotBlank())
         item.mesiIntervallo - mesiTra(item.ultimaData, oggi) else null
 
+    val maiFatto = item.ultimoKm <= 0 && item.ultimaData.isBlank()
     val scaduto = (remKm != null && remKm <= 0) || (remMesi != null && remMesi <= 0)
     val inScadenza = (remKm != null && remKm <= 1500) || (remMesi != null && remMesi <= 1)
 
     val (label, color) = when {
+        maiFatto -> "Mai registrato" to MaterialTheme.colorScheme.onSurfaceVariant
         scaduto -> "SCADUTO" to MaterialTheme.colorScheme.error
         inScadenza -> "In scadenza" to androidx.compose.ui.graphics.Color(0xFFF5C211)
         else -> "In regola" to androidx.compose.ui.graphics.Color(0xFF33D17A)
@@ -217,6 +219,7 @@ private fun ManutenzioneItem(
             if (item.mesiIntervallo > 0) add("ogni ${item.mesiIntervallo} mesi")
             remKm?.let { add(if (it > 0) "mancano $it km" else "scaduto di ${-it} km") }
             remMesi?.let { add(if (it > 0) "$it mesi rimanenti" else "scaduto di ${-it} mesi") }
+            if (maiFatto) add("segna l'ultimo intervento per avviare il conteggio")
         }
         Text(dettagli.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
         Text(

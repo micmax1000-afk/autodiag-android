@@ -19,13 +19,17 @@ fun CodiciScreen() {
     ) {
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it.uppercase() },
-            label = { Text("Cerca codice (es. P0300)") },
+            onValueChange = { query = it },
+            label = { Text("Cerca codice o parola (es. P0300, lambda)") },
+            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        val results = if (query.isBlank()) emptyList() else
-            DtcDatabase.codes.filterKeys { it.contains(query) }.toList().take(20)
+        val q = query.trim()
+        val results = if (q.isBlank()) emptyList() else
+            DtcDatabase.codes.filter { (code, desc) ->
+                code.contains(q, ignoreCase = true) || desc.contains(q, ignoreCase = true)
+            }.toList().take(30)
 
         if (query.isNotBlank()) {
             Card {
